@@ -6,7 +6,7 @@
 ![NAS](https://img.shields.io/badge/Storage-1%20TB%20NAS-orange)
 ![WPA3](https://img.shields.io/badge/WiFi-WPA2%2FWPA3-green)
 
-A home SOHO network build using a GL-iNet Flint 2 router, focused on security hardening, network-level ad and tracker blocking, encrypted DNS, private remote access via mesh VPN, and network-attached storage — all self-hosted with no cloud dependency.
+A home SOHO network build using a GL-iNet Flint 2 router, focused on security hardening, network-level ad and tracker blocking, encrypted DNS, private remote access via mesh VPN, and network-attached storage
 
 ---
 
