@@ -214,8 +214,7 @@ Given VLAN configuration quirks on the Flint 2, isolated the Google TV using a d
 ![Guest network security settings](screenshots/guest-network-security-settings.png)
 *AP Isolation and Block WAN Subnets enabled on the guest network*
 
-![AdGuard Google TV blocked domains](screenshots/adguard-googletv-blocked.png)
-*AdGuard Home query log showing blocked tracking domains from the Google TV*
+
 
 **Tradeoff vs VLAN:** A dedicated VLAN with inter-VLAN firewall rules would give more granular control, but the guest network approach achieves the same core goal — internet access with no visibility into the main LAN — with less complexity on this hardware.
 
