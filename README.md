@@ -6,7 +6,7 @@
 ![NAS](https://img.shields.io/badge/Storage-1%20TB%20NAS-orange)
 ![WPA3](https://img.shields.io/badge/WiFi-WPA2%2FWPA3-green)
 
-A home SOHO network build using a GL-iNet Flint 2 router, focused on security hardening, network-level ad and tracker blocking, encrypted DNS, private remote access via mesh VPN, and network-attached storage
+A home SOHO network build using a GL-iNet Flint 2 router, focused on security hardening, network-level ad and tracker blocking, encrypted DNS, private remote access via mesh VPN, and network-attached storage — all self-hosted with no cloud dependency.
 
 ---
 
@@ -21,6 +21,8 @@ A home SOHO network build using a GL-iNet Flint 2 router, focused on security ha
 - [Remote Access via Tailscale & RDP](#remote-access-via-tailscale--rdp)
 - [Network-Attached Storage](#network-attached-storage)
 - [Remote NAS Access](#remote-nas-access)
+- [Google TV Isolation (Guest Network)](#google-tv-isolation-guest-network)
+- [Config Backup](#config-backup)
 - [Known Limitations & Tradeoffs](#known-limitations--tradeoffs)
 - [Upcoming Work](#upcoming-work)
 
@@ -79,26 +81,18 @@ Kept to three high-quality lists intentionally — more lists increase DNS looku
 All DNS queries leaving the router are encrypted using **DNS-over-TLS (DoT)**, preventing ISP snooping on DNS traffic.
 
 **Upstream DNS resolvers (DoT):**
-
-```
 tls://1.1.1.1         # Cloudflare
 tls://1.0.0.1         # Cloudflare secondary
 tls://9.9.9.9         # Quad9
 tls://149.112.112.112  # Quad9 secondary
-```
-
 ![AdGuard upstream DNS](screenshots/adguard-upstream-dns.png)
 *AdGuard Home upstream DNS servers configured with DNS-over-TLS*
 
 **Bootstrap DNS servers** (used to resolve the DoT hostnames on startup):
-
-```
 1.1.1.1
 1.0.0.1
 9.9.9.9
 149.112.112.112
-```
-
 ![AdGuard bootstrap DNS](screenshots/adguard-bootstrap-dns.png)
 *Bootstrap servers match the upstream resolvers to avoid a circular dependency on startup*
 
@@ -203,6 +197,47 @@ Enabled Tailscale directly on the Flint 2 router for secure remote access to the
 
 ---
 
+## Google TV Isolation (Guest Network)
+
+Given VLAN configuration quirks on the Flint 2, isolated the Google TV using a dedicated 5 GHz guest WiFi network instead of a tagged VLAN.
+
+**Setup steps:**
+
+1. Enabled 5 GHz guest WiFi in the admin panel
+2. Configured WPA2/WPA3 mixed mode with a strong unique password
+3. Navigated to **Network > Guest Network > Security Settings** and enabled:
+   - **AP Isolation** — prevents the Google TV from communicating with other devices on the guest network
+   - **Block WAN Subnets** — blocks access to the main LAN subnet, preventing lateral movement to trusted devices
+4. Connected Google TV to the guest SSID
+5. Verified AdGuard Home was blocking tracking domains while streaming — confirmed via the query log with the TV actively in use
+
+![Guest network security settings](screenshots/guest-network-security-settings.png)
+*AP Isolation and Block WAN Subnets enabled on the guest network*
+
+![AdGuard Google TV blocked domains](screenshots/adguard-googletv-blocked.png)
+*AdGuard Home query log showing blocked tracking domains from the Google TV*
+
+**Tradeoff vs VLAN:** A dedicated VLAN with inter-VLAN firewall rules would give more granular control, but the guest network approach achieves the same core goal — internet access with no visibility into the main LAN — with less complexity on this hardware.
+
+---
+
+## Config Backup
+
+Router configuration backed up via the LuCI interface.
+
+**Steps:**
+
+1. Navigated to **LuCI > System > Backup & Flash Firmware**
+2. Clicked **Generate Archive** to download a `.tar.gz` of all config files
+3. Stored in a safe local location
+
+![LuCI backup](screenshots/luci-backup.png)
+*LuCI Flash Operations page — Generate Archive downloads a full config backup*
+
+> **Restore:** Upload the archive via the same page. Note that custom files like certificates or scripts may persist on the system — perform a factory reset first if doing a clean restore.
+
+---
+
 ## Known Limitations & Tradeoffs
 
 | Issue | Details |
@@ -210,48 +245,14 @@ Enabled Tailscale directly on the Flint 2 router for secure remote access to the
 | Android VPN slot conflict | Stock Android allows only one active VPN at a time. Tailscale and ProtonVPN cannot run simultaneously — must disconnect ProtonVPN to use Tailscale remote access on Android. |
 | NTFS vs ext4 | NTFS chosen for Windows compatibility. ext4 would give better native performance on the router but limits direct Windows access without extra drivers. |
 | O&O ShutUp10 | Remote Assistance was blocked by a privacy hardening tool. Required manual re-enable for RDP to function. |
+| Google TV VLAN | Full VLAN isolation deferred due to Flint 2 config quirks — guest network used instead. Revisit if hardware changes. |
 
-## Google TV Isolation (Guest Network)
-
-Given VLAN configuration quirks on the Flint 2, isolated the Google TV using a
-dedicated 5 GHz guest WiFi network instead of a tagged VLAN.
-
-**Setup steps:**
-
-1. Enabled 5 GHz guest WiFi in the admin panel
-2. Configured WPA2/WPA3 mixed mode with a strong unique password
-3. Navigated to **Network > Guest Network > Security Settings** and enabled:
-   - **AP Isolation** — prevents the Google TV from communicating with other
-     devices on the guest network
-   - **Block WAN Subnets** — blocks access to the main LAN subnet, preventing
-     lateral movement to trusted devices
-4. Connected Google TV to the guest SSID
-5. Verified AdGuard Home was blocking tracking domains while streaming —
-   confirmed via the query log with the TV actively in use
-
-**Tradeoff vs VLAN:** A dedicated VLAN with inter-VLAN firewall rules would give
-more granular control, but the guest network approach achieves the same core goal
-(internet access, no LAN visibility) with less complexity on this hardware.
 ---
-## Config Backup
-
-Router configuration backed up via the LuCI interface.
-
-**Steps:**
-1. Navigated to **LuCI > System > Backup & Flash Firmware**
-2. Clicked **Generate Archive** to download a `.tar.gz` of all config files
-3. Stored in a safe local location
-
-> Restore: upload the archive via the same page. Note that custom files like
-> certificates or scripts may persist on the system — perform a factory reset
-> first if doing a clean restore.
-
 
 ## Upcoming Work
+
 - [x] **Config Backups:** Manual backup via LuCI > System > Backup & Flash Firmware > Generate Archive.
-- [x] **IoT isolation:** Google TV isolated via dedicated guest network with
-  AP Isolation and Block WAN Subnets enabled. VLAN approach deferred due to
-  Flint 2 config quirks — revisit if hardware changes.
+- [x] **IoT Isolation:** Google TV isolated via dedicated guest network with AP Isolation and Block WAN Subnets enabled.
 - [ ] Investigate WireGuard site-to-site or Tailscale exit node as a solution to the Android single-VPN-slot limitation
 - [ ] Test and document Tailscale RDP stability over varied network conditions
 - [ ] Explore ext4 formatting with appropriate Windows drivers for improved NAS performance
