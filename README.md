@@ -211,11 +211,47 @@ Enabled Tailscale directly on the Flint 2 router for secure remote access to the
 | NTFS vs ext4 | NTFS chosen for Windows compatibility. ext4 would give better native performance on the router but limits direct Windows access without extra drivers. |
 | O&O ShutUp10 | Remote Assistance was blocked by a privacy hardening tool. Required manual re-enable for RDP to function. |
 
+## Google TV Isolation (Guest Network)
+
+Given VLAN configuration quirks on the Flint 2, isolated the Google TV using a
+dedicated 5 GHz guest WiFi network instead of a tagged VLAN.
+
+**Setup steps:**
+
+1. Enabled 5 GHz guest WiFi in the admin panel
+2. Configured WPA2/WPA3 mixed mode with a strong unique password
+3. Navigated to **Network > Guest Network > Security Settings** and enabled:
+   - **AP Isolation** — prevents the Google TV from communicating with other
+     devices on the guest network
+   - **Block WAN Subnets** — blocks access to the main LAN subnet, preventing
+     lateral movement to trusted devices
+4. Connected Google TV to the guest SSID
+5. Verified AdGuard Home was blocking tracking domains while streaming —
+   confirmed via the query log with the TV actively in use
+
+**Tradeoff vs VLAN:** A dedicated VLAN with inter-VLAN firewall rules would give
+more granular control, but the guest network approach achieves the same core goal
+(internet access, no LAN visibility) with less complexity on this hardware.
 ---
+## Config Backup
+
+Router configuration backed up via the LuCI interface.
+
+**Steps:**
+1. Navigated to **LuCI > System > Backup & Flash Firmware**
+2. Clicked **Generate Archive** to download a `.tar.gz` of all config files
+3. Stored in a safe local location
+
+> Restore: upload the archive via the same page. Note that custom files like
+> certificates or scripts may persist on the system — perform a factory reset
+> first if doing a clean restore.
+
 
 ## Upcoming Work
-
-- [ ] **IoT VLAN — Google TV isolation:** Configure a dedicated VLAN for a wifi-only Google TV to isolate it from the main trusted network. Smart TVs and streaming devices are known data collectors; a VLAN prevents lateral movement to other LAN devices while still allowing internet access. Will document VLAN tagging, inter-VLAN firewall rules, and any AdGuard Home client profile separation per VLAN.
+- [x] **Config Backups:** Manual backup via LuCI > System > Backup & Flash Firmware > Generate Archive.
+- [x] **IoT isolation:** Google TV isolated via dedicated guest network with
+  AP Isolation and Block WAN Subnets enabled. VLAN approach deferred due to
+  Flint 2 config quirks — revisit if hardware changes.
 - [ ] Investigate WireGuard site-to-site or Tailscale exit node as a solution to the Android single-VPN-slot limitation
 - [ ] Test and document Tailscale RDP stability over varied network conditions
 - [ ] Explore ext4 formatting with appropriate Windows drivers for improved NAS performance
