@@ -85,7 +85,7 @@ tls://1.1.1.1         # Cloudflare
 tls://1.0.0.1         # Cloudflare secondary
 tls://9.9.9.9         # Quad9
 tls://149.112.112.112  # Quad9 secondary
-![AdGuard upstream DNS](screenshots/adguard-upstream-dns.png)
+
 *AdGuard Home upstream DNS servers configured with DNS-over-TLS*
 
 **Bootstrap DNS servers** (used to resolve the DoT hostnames on startup):
